@@ -1,2 +1,2 @@
 # montecarlo-paralelo
-Paralelización del algoritmo de montecarlo para calculo de PI. 
+Paralelización del algoritmo de montecarlo para cálculo de PI. 
