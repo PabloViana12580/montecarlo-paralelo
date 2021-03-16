@@ -30,17 +30,21 @@ long long int Count_hits(long long int number_of_tosses, int thread_count);
 
 /*---------------------------------------------------------------------*/
 int main(int argc, char* argv[]) {
-   double pi_estimate;
+   double pi_estimate, start, finish;
    int thread_count;
    long long int number_in_circle;
    long long int number_of_tosses;
    
    if (argc != 3) Usage(argv[0]);
    Get_args(argv, &thread_count, &number_of_tosses);
-   
-   number_in_circle = Count_hits(number_of_tosses, thread_count);
 
-   printf("%d\n", number_in_circle);
+   //Medimos tiempo paralelo
+   start = omp_get_wtime();
+   number_in_circle = Count_hits(number_of_tosses, thread_count);
+   finish = omp_get_wtime();
+
+   printf("Elapsed time = %e seconds\n", finish - start);
+
    pi_estimate = (4*number_in_circle)/((double) number_of_tosses);
    printf("Estimated pi: %e\n", pi_estimate);
 
@@ -55,30 +59,37 @@ int main(int argc, char* argv[]) {
  */
 
 long long int Count_hits(long long int number_of_tosses, int thread_count) {
+  //Iniciamos variables para calculo de aciertosm y números aleatorios
    long long int numero_aciertos = 0;
    int n, i;
-   int seed = 1, seed2 = 10, temp, temp2;
+   unsigned seed = 1, seed2 = 10, temp, temp2;
    double x, y, d_cuadrara;
 
+   //Semillas diferentes
    temp = my_rand(&seed);
    temp2 = my_rand(&seed2);
 
-   time_t sec;
-#  pragma omp parallel for num_threads(thread_count) default(none) reduction(+: numero_aciertos) shared(number_of_tosses, temp, temp2) private(x, y, d_cuadrara)
+   //Directivas de openmp para paralelizar el cálculo de los número aleatorios
+#  pragma omp parallel for num_threads(thread_count) default(none) reduction(+: numero_aciertos) shared(number_of_tosses, temp, temp2) private(x, y, d_cuadrara) schedule(dynamic, 6)
    for (i = 0; i < number_of_tosses; i++) {
+      //Primer número
       temp = my_rand(&temp);
       x = my_drand(&temp);
 
+      //Segundo número
       temp2 = my_rand(&temp2);
       y = my_drand(&temp2);
       
+      // Distancia al cuadrado
       d_cuadrara = (x*x) + (y*y);
+
+      //Si él valor de la distancia es menor o igual a uno (si el dardo cayó dentro del círculo) agregar un acierto
       if (d_cuadrara <= 1){
         numero_aciertos ++;
 
       }
    }
-  printf("%d\n", numero_aciertos);
+  
   return numero_aciertos;
 }  /* Count_hits */
 
